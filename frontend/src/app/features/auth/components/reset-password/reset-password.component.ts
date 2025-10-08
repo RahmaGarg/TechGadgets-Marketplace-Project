@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, PasswordResetConfirm } from '../../services/auth.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-reset-password',
   templateUrl: './reset-password.component.html',
-  styleUrls: ['./reset-password.component.css']
+  styleUrls: ['./reset-password.component.css'],
+  imports: [CommonModule, FormsModule]
 })
 export class ResetPasswordComponent implements OnInit {
   token: string = '';
@@ -16,6 +19,10 @@ export class ResetPasswordComponent implements OnInit {
   isLoading: boolean = false;
   isValidatingToken: boolean = true;
   isTokenValid: boolean = false;
+  
+  // Add these missing properties for password visibility toggle
+  showPassword: boolean = false;
+  showConfirmPassword: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -24,7 +31,7 @@ export class ResetPasswordComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Récupérer le token depuis l'URL
+    // Get token from URL query parameters
     this.route.queryParams.subscribe(params => {
       this.token = params['token'];
       
@@ -34,7 +41,7 @@ export class ResetPasswordComponent implements OnInit {
         return;
       }
 
-      // Valider le token
+      // Validate the token
       this.validateToken();
     });
   }
@@ -62,24 +69,31 @@ export class ResetPasswordComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    // Réinitialiser les messages
+  // Changed method name from onSubmit to onResetPassword to match HTML
+  onResetPassword(): void {
+    // Reset messages
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Validation des champs
+    // Validate fields
     if (!this.newPassword || !this.confirmPassword) {
       this.errorMessage = 'Please fill in all fields';
       return;
     }
 
-    // Validation de la longueur du mot de passe
+    // Validate password length
     if (this.newPassword.length < 8) {
       this.errorMessage = 'Password must be at least 8 characters long';
       return;
     }
 
-    // Vérifier que les mots de passe correspondent
+    // Validate password requirements (aligned with backend)
+    if (!this.isPasswordValid()) {
+      this.errorMessage = 'Password must contain at least: 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character (@$!%*?&#)';
+      return;
+    }
+
+    // Check if passwords match
     if (this.newPassword !== this.confirmPassword) {
       this.errorMessage = 'Passwords do not match';
       return;
@@ -100,7 +114,7 @@ export class ResetPasswordComponent implements OnInit {
         
         this.successMessage = 'Password reset successfully! Redirecting to login...';
         
-        // Rediriger vers login après 2 secondes
+        // Redirect to login after 2 seconds
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 2000);
@@ -109,21 +123,59 @@ export class ResetPasswordComponent implements OnInit {
         this.isLoading = false;
         console.error('Password reset error:', error);
         
-        // Gérer les différents types d'erreurs
+        // Extract error message from response
+        let errorMsg = 'An error occurred. Please try again.';
+        
+        if (error.error) {
+          // If error.error is a string, use it directly
+          if (typeof error.error === 'string') {
+            errorMsg = error.error;
+          } 
+          // If error.error is an object with a message property
+          else if (error.error.message) {
+            errorMsg = error.error.message;
+          }
+          // If error.error is an object with an error property
+          else if (error.error.error) {
+            errorMsg = error.error.error;
+          }
+        }
+        
+        // Handle different error types with extracted message
         if (error.status === 400) {
-          this.errorMessage = error.error || 'Invalid token or passwords do not match';
+          this.errorMessage = errorMsg;
+        } else if (error.status === 403) {
+          this.errorMessage = errorMsg;
         } else if (error.status === 404) {
           this.errorMessage = 'Reset token not found or has expired';
         } else if (error.status === 0) {
           this.errorMessage = 'Cannot connect to server. Please try again later.';
         } else {
-          this.errorMessage = error.error || 'An error occurred. Please try again.';
+          this.errorMessage = errorMsg;
         }
       }
     });
   }
 
-  // Méthode pour vérifier la force du mot de passe
+  // Add password visibility toggle methods
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
+  // Validate password requirements (aligned with backend)
+  isPasswordValid(): boolean {
+    const hasUpperCase = /[A-Z]/.test(this.newPassword);
+    const hasLowerCase = /[a-z]/.test(this.newPassword);
+    const hasDigit = /\d/.test(this.newPassword);
+    const hasSpecialChar = /[@$!%*?&#]/.test(this.newPassword);
+    return hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
+  }
+
+  // Method to check password strength
   getPasswordStrength(): string {
     if (!this.newPassword) return '';
     
@@ -132,18 +184,40 @@ export class ResetPasswordComponent implements OnInit {
     
     const hasUpperCase = /[A-Z]/.test(this.newPassword);
     const hasLowerCase = /[a-z]/.test(this.newPassword);
-    const hasNumbers = /\d/.test(this.newPassword);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(this.newPassword);
+    const hasDigit = /\d/.test(this.newPassword);
+    const hasSpecialChar = /[@$!%*?&#]/.test(this.newPassword);
     
-    const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar]
+    const strength = [hasUpperCase, hasLowerCase, hasDigit, hasSpecialChar]
       .filter(Boolean).length;
     
-    if (strength >= 3) return 'strong';
-    return 'medium';
+    if (strength >= 4) return 'strong';
+    if (strength >= 3) return 'medium';
+    return 'weak';
   }
 
-  // Vérifier si les mots de passe correspondent
+  // Check if passwords match
   passwordsMatch(): boolean {
     return this.newPassword === this.confirmPassword && this.confirmPassword.length > 0;
+  }
+
+  // Helper methods for password requirements validation (aligned with backend)
+  hasMinLength(): boolean {
+    return this.newPassword.length >= 8;
+  }
+
+  hasUpperCase(): boolean {
+    return /[A-Z]/.test(this.newPassword);
+  }
+
+  hasLowerCase(): boolean {
+    return /[a-z]/.test(this.newPassword);
+  }
+
+  hasDigit(): boolean {
+    return /\d/.test(this.newPassword);
+  }
+
+  hasSpecialChar(): boolean {
+    return /[@$!%*?&#]/.test(this.newPassword);
   }
 }

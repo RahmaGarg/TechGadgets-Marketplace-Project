@@ -80,7 +80,20 @@ export class LoginComponent implements OnInit {
 
   private redirectBasedOnRole(): void {
     const role = this.authService.getUserRole();
-    console.log(role)
+  switch (role) {
+    case 'ADMIN':
+      this.router.navigate(['/admin/home']);
+      break;
+    case 'FREELANCER':
+      this.router.navigate(['/freelancer/home']);
+      break;
+    case 'CLIENT':
+      this.router.navigate(['/client/home']);
+      break;
+    default:
+      this.router.navigate(['/login']); // cas où le rôle n'est pas reconnu
+      break;
+  }
   }
 
   private isValidEmail(email: string): boolean {

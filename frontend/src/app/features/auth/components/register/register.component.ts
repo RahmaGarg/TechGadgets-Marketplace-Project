@@ -74,12 +74,10 @@ export class RegisterComponent implements OnInit {
         this.isLoading = false;
         console.log('Registration successful:', response);
         
-        this.successMessage = 'Account created successfully! Redirecting...';
+        this.successMessage = 'Account created successfully!';
         
-        // Attendre 1.5 secondes avant de rediriger pour montrer le message de succès
-        setTimeout(() => {
-          this.redirectBasedOnRole();
-        }, 1500);
+           this.router.navigate(['/login']); // cas où le rôle n'est pas reconnu
+
       },
       error: (error) => {
         this.isLoading = false;
@@ -103,7 +101,20 @@ export class RegisterComponent implements OnInit {
 
   private redirectBasedOnRole(): void {
     const role = this.authService.getUserRole();
-    console.log(role)
+  switch (role) {
+    case 'ADMIN':
+      this.router.navigate(['/admin/home']);
+      break;
+    case 'FREELANCER':
+      this.router.navigate(['/freelancer/home']);
+      break;
+    case 'CLIENT':
+      this.router.navigate(['/client/home']);
+      break;
+    default:
+      this.router.navigate(['/login']); // cas où le rôle n'est pas reconnu
+      break;
+  }
   }
 
   private isValidEmail(email: string): boolean {
