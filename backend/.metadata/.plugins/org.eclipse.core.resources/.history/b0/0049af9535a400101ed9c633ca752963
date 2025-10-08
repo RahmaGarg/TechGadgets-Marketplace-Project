@@ -1,0 +1,16 @@
+package com.example.demo.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// DTO pour demander un reset
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class  {
+    private String email;
+}
+
+
+

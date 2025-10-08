@@ -1,0 +1,10 @@
+package com.example.demo.dtos;
+
+@Data
+@AllArgsConstructor
+public class AuthResponse {
+    private String token;
+    private String email;
+    private String name;
+    private RoleType role;
+}

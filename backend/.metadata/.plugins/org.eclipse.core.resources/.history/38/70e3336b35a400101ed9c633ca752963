@@ -1,0 +1,31 @@
+package com.example.demo.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// DTO pour demander un reset
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PasswordResetRequest {
+    private String email;
+}
+
+// DTO pour confirmer le reset avec nouveau mot de passe
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PasswordResetConfirm {
+    private String token;
+    private String newPassword;
+    private String confirmPassword;
+}
+
+// DTO pour la réponse
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class MessageResponse {
+    private String message;
+}
