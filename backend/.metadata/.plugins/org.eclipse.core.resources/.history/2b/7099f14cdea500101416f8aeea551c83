@@ -1,0 +1,15 @@
+package com.example.demo.dtos;
+
+import com.example.demo.enums.RoleType;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class AuthResponse {
+    private String token;
+    private String email;
+    private String name;
+    private RoleType role;
+}

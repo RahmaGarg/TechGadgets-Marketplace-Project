@@ -4,7 +4,7 @@ import { MainLayoutComponent } from './layout/main-layout/main-layout/main-layou
 import { ResetPasswordComponent } from './features/auth/components/reset-password/reset-password.component';
 import { AdminHomeComponent } from './features/admin/components/admin-home/admin-home.component';
 import { ClientHomeComponent } from './features/client/components/client-home/client-home.component';
-import { FreelancerHomeComponent } from './features/freelancer/components/freelancer-home/freelancer-home.component';
+import { SellerHomeComponent } from './features/seller/components/seller-home/seller-home.component';
 
 export const routes: Routes = [
   // ==========================================
@@ -42,7 +42,7 @@ export const routes: Routes = [
     { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'admin/home', component: AdminHomeComponent},
   { path: 'client/home', component: ClientHomeComponent},
-  { path: 'freelancer/home', component: FreelancerHomeComponent },
+  { path: 'seller/home', component: SellerHomeComponent },
 
 
   // ==========================================
@@ -65,10 +65,6 @@ export const routes: Routes = [
      
     ]
   },
-
-  // ==========================================
-  // ROUTES FREELANCER
-  // ==========================================
 
 
   // ==========================================

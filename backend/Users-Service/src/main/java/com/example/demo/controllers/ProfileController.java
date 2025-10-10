@@ -1,0 +1,72 @@
+package com.example.demo.controllers;
+
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import com.example.demo.dtos.ChangePasswordRequest;
+import com.example.demo.dtos.CompleteProfileRequest;
+import com.example.demo.dtos.ProfileResponse;
+import com.example.demo.services.ProfileService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/profile")
+@RequiredArgsConstructor
+public class ProfileController {
+    
+    private final ProfileService profileService;
+    
+    /**
+     * Compléter le profil après l'inscription
+     */
+    @PostMapping("/complete")
+    public ResponseEntity<ProfileResponse> completeProfile(
+            @Valid @RequestBody CompleteProfileRequest request,
+            Authentication authentication) {
+        
+        String email = authentication.getName();
+        ProfileResponse response = profileService.completeProfile(email, request);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Récupérer les informations du profil
+     */
+    @GetMapping
+    public ResponseEntity<ProfileResponse> getProfile(Authentication authentication) {
+        String email = authentication.getName();
+        ProfileResponse response = profileService.getProfile(email);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Mettre à jour le profil
+     */
+    @PutMapping
+    public ResponseEntity<ProfileResponse> updateProfile(
+            @Valid @RequestBody CompleteProfileRequest request,
+            Authentication authentication) {
+        
+        String email = authentication.getName();
+        ProfileResponse response = profileService.updateProfile(email, request);
+        
+        return ResponseEntity.ok(response);
+    }
+    @PutMapping("/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        Map<String, String> response = profileService.changePassword(email, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+}

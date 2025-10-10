@@ -37,7 +37,7 @@ public class SecurityConfig {
                 
                 // Routes protégées par rôle
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
-                .requestMatchers("/api/freelancer/**").hasAnyRole("FREELANCER", "ADMIN")
+                .requestMatchers("/api/seller/**").hasAnyRole("SELLER", "ADMIN")
                 .requestMatchers("/api/client/**").hasAnyRole("CLIENT", "ADMIN")
                 
                 // Toutes les autres requêtes nécessitent une authentification

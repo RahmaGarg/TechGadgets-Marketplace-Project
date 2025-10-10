@@ -79,8 +79,8 @@ export class ForgotPasswordComponent  {
     const role = this.authService.getUserRole();
     
     switch (role?.toUpperCase()) {
-      case 'FREELANCER':
-        this.router.navigate(['/freelancer/dashboard']);
+      case 'SELLER':
+        this.router.navigate(['/seller/dashboard']);
         break;
       case 'CLIENT':
         this.router.navigate(['/client/dashboard']);

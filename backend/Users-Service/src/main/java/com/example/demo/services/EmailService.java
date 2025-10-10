@@ -48,7 +48,7 @@ public class EmailService {
             "Ce lien expirera dans 1 heure.\n\n" +
             "Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.\n\n" +
             "Cordialement,\n" +
-            "L'équipe",
+            "L'équipe de TechMarket",
             userName,
             resetLink
         );

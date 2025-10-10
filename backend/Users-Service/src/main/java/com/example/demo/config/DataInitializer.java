@@ -22,7 +22,7 @@ public class DataInitializer {
                     roleRepository.save(role);
                 }
             }
-            System.out.println("✓ Roles initialized: ADMIN, FREELANCER, CLIENT");
+            System.out.println("✓ Roles initialized: ADMIN, SELLER, CLIENT");
         };
     }
 }
