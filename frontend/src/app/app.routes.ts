@@ -6,6 +6,7 @@ import { AdminHomeComponent } from './features/admin/components/admin-home/admin
 import { ClientHomeComponent } from './features/client/components/client-home/client-home.component';
 import { SellerHomeComponent } from './features/seller/components/seller-home/seller-home.component';
 import { CompleteProfileComponent } from './features/auth/components/complete-profile/complete-profile.component';
+import { UserProfileComponent } from './features/auth/components/user-profile/user-profile.component';
 
 export const routes: Routes = [
   // ==========================================
@@ -43,6 +44,7 @@ export const routes: Routes = [
     { path: 'reset-password', component: ResetPasswordComponent },
 
         { path: 'complete-profile', component: CompleteProfileComponent },
+        { path: 'my-profile', component: UserProfileComponent},
 
   { path: 'admin/home', component: AdminHomeComponent},
   { path: 'client/home', component: ClientHomeComponent},
