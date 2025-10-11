@@ -46,9 +46,9 @@ export const routes: Routes = [
         { path: 'complete-profile', component: CompleteProfileComponent },
         { path: 'my-profile', component: UserProfileComponent},
 
-  { path: 'admin/home', component: AdminHomeComponent},
-  { path: 'client/home', component: ClientHomeComponent},
-  { path: 'seller/home', component: SellerHomeComponent },
+  { path: 'admin/dashboard', component: AdminHomeComponent},
+  { path: 'client/dashboard', component: ClientHomeComponent},
+  { path: 'seller/dashboard', component: SellerHomeComponent },
 
 
   // ==========================================

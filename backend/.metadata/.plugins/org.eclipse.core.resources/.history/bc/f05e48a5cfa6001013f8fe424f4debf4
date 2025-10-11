@@ -1,0 +1,31 @@
+package com.example.demo.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import com.example.demo.security.ProfileCompletionInterceptor;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {  
+    private final ProfileCompletionInterceptor profileCompletionInterceptor;
+
+    public WebConfig(ProfileCompletionInterceptor profileCompletionInterceptor) {
+        this.profileCompletionInterceptor = profileCompletionInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(profileCompletionInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns(
+                    "/api/auth/**",
+                    "/api/profile/complete",
+                    "/api/profile"
+                );
+    }
+}

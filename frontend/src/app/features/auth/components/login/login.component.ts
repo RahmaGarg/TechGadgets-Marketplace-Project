@@ -3,7 +3,6 @@ import { Router } from '@angular/router';
 import { AuthService, LoginRequest } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -23,23 +22,19 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Si l'utilisateur est déjà connecté, rediriger selon son rôle
     if (this.authService.isLoggedIn()) {
       this.redirectBasedOnRole();
     }
   }
 
   onLogin(): void {
-    // Réinitialiser le message d'erreur
     this.errorMessage = '';
 
-    // Validation basique
     if (!this.email || !this.password) {
       this.errorMessage = 'Please fill in all fields';
       return;
     }
 
-    // Validation de l'email
     if (!this.isValidEmail(this.email)) {
       this.errorMessage = 'Please enter a valid email address';
       return;
@@ -56,15 +51,20 @@ export class LoginComponent implements OnInit {
       next: (response) => {
         this.isLoading = false;
         console.log('Login successful:', response);
-        
-        // Rediriger selon le rôle de l'utilisateur
-        this.redirectBasedOnRole();
+
+        // Vérifier si le profil est complété
+        if (response.isProfileCompleted) {
+          // Le profil est complété, rediriger selon le rôle
+          this.redirectBasedOnRole();
+        } else {
+          // Le profil n'est pas complété, rediriger vers la page de complétion
+          this.router.navigate(['/complete-profile']);
+        }
       },
       error: (error) => {
         this.isLoading = false;
         console.error('Login error:', error);
-        
-        // Gérer les différents types d'erreurs
+
         if (error.status === 401) {
           this.errorMessage = 'Invalid email or password';
         } else if (error.status === 403) {
@@ -80,20 +80,20 @@ export class LoginComponent implements OnInit {
 
   private redirectBasedOnRole(): void {
     const role = this.authService.getUserRole();
-  switch (role) {
-    case 'ADMIN':
-      this.router.navigate(['/admin/home']);
-      break;
-    case 'SELLER':
-      this.router.navigate(['/seller/home']);
-      break;
-    case 'CLIENT':
-      this.router.navigate(['/client/home']);
-      break;
-    default:
-      this.router.navigate(['/login']); // cas où le rôle n'est pas reconnu
-      break;
-  }
+    switch (role) {
+      case 'ADMIN':
+        this.router.navigate(['/admin/dashboard']);
+        break;
+      case 'SELLER':
+        this.router.navigate(['/seller/dashboard']);
+        break;
+      case 'CLIENT':
+        this.router.navigate(['/client/dashboard']);
+        break;
+      default:
+        this.router.navigate(['/login']);
+        break;
+    }
   }
 
   private isValidEmail(email: string): boolean {

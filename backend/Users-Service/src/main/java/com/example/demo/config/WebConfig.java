@@ -11,11 +11,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.example.demo.security.ProfileCompletionInterceptor;
 
 @Configuration
-public class WebConfig implements WebMvcConfigurer {  
+public class WebConfig implements WebMvcConfigurer {
 
     private final ProfileCompletionInterceptor profileCompletionInterceptor;
 
-    // ✅ Constructeur pour l’injection du ProfileCompletionInterceptor
     public WebConfig(ProfileCompletionInterceptor profileCompletionInterceptor) {
         this.profileCompletionInterceptor = profileCompletionInterceptor;
     }
@@ -26,9 +25,14 @@ public class WebConfig implements WebMvcConfigurer {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:4200"); // URL de ton front Angular
+        config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
+        config.setMaxAge(3600L);
 
         source.registerCorsConfiguration("/api/**", config);
         return new CorsFilter(source);
@@ -37,11 +41,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(profileCompletionInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                    "/api/auth/**",
-                    "/api/profile/complete",
-                    "/api/profile"
-                );
+            .addPathPatterns("/api/**")
+            .excludePathPatterns(
+                "/api/auth/**",
+                "/api/profile/complete",
+                "/api/profile"
+            );
     }
 }

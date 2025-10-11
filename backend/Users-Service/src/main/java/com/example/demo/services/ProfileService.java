@@ -30,16 +30,23 @@ public class ProfileService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Vérifier si le profil n'est pas déjà complété
-        if (user.getIsProfileCompleted()) {
+        // Check if user is ADMIN
+        boolean isAdmin = user.getRole() != null && user.getRole().equals("ADMIN");
+        
+        // Vérifier si le profil n'est pas déjà complété (skip for ADMIN)
+        if (user.getIsProfileCompleted() && !isAdmin) {
             throw new RuntimeException("Profile already completed");
         }
         
-        // Mettre à jour les informations
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setAddress(request.getAddress());
-        user.setCity(request.getCity());
-        user.setCountry(request.getCountry());
+        // Mettre à jour les informations (only for non-ADMIN users)
+        if (!isAdmin) {
+            user.setPhoneNumber(request.getPhoneNumber());
+            user.setAddress(request.getAddress());
+            user.setCity(request.getCity());
+            user.setCountry(request.getCountry());
+        }
+        
+        // Set profile completed flag
         user.setIsProfileCompleted(true);
         user.setProfileCompletedAt(LocalDateTime.now());
         
@@ -63,14 +70,19 @@ public class ProfileService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Mettre à jour les informations
-        user.setPhoneNumber(request.getPhoneNumber());
-        user.setAddress(request.getAddress());
-        user.setCity(request.getCity());
-        user.setCountry(request.getCountry());
+        // Check if user is ADMIN
+        boolean isAdmin = user.getRole() != null && user.getRole().equals("ADMIN");
+        
+        // Mettre à jour les informations (only for non-ADMIN users)
+        if (!isAdmin) {
+            user.setPhoneNumber(request.getPhoneNumber());
+            user.setAddress(request.getAddress());
+            user.setCity(request.getCity());
+            user.setCountry(request.getCountry());
+        }
         
         // Vérifier si le profil est maintenant complet
-        if (user.canMarkProfileAsCompleted() && !user.getIsProfileCompleted()) {
+        if ((isAdmin || user.canMarkProfileAsCompleted()) && !user.getIsProfileCompleted()) {
             user.setIsProfileCompleted(true);
             user.setProfileCompletedAt(LocalDateTime.now());
         }
@@ -80,6 +92,7 @@ public class ProfileService {
         
         return mapToProfileResponse(user);
     }
+
     @Transactional
     public Map<String, String> changePassword(String email, ChangePasswordRequest request) {
         // Récupérer l'utilisateur
@@ -110,7 +123,6 @@ public class ProfileService {
 
         return Map.of("message", "Password changed successfully");
     }
-
 
     
     private ProfileResponse mapToProfileResponse(User user) {

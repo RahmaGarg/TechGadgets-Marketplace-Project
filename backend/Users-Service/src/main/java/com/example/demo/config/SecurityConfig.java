@@ -30,16 +30,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> {})  // ✅ Enable CORS support in Spring Security
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Routes publiques (accessibles sans authentification)
                 .requestMatchers("/api/auth/**").permitAll()
-                
+                .requestMatchers("/api/profile/complete").permitAll()  // ✅ Allow profile completion endpoint
+
                 // Routes protégées par rôle
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .requestMatchers("/api/seller/**").hasAnyRole("SELLER", "ADMIN")
                 .requestMatchers("/api/client/**").hasAnyRole("CLIENT", "ADMIN")
-                
+
                 // Toutes les autres requêtes nécessitent une authentification
                 .anyRequest().authenticated()
             )
