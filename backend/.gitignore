@@ -1,0 +1,11 @@
+# Eclipse metadata
+/.metadata/
+/*.log
+
+# SonarLint
+/.sonarlint/
+
+# Other IDE files
+/.project
+/.classpath
+/.settings/
