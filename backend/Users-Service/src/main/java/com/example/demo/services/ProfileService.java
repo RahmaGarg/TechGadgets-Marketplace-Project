@@ -8,6 +8,7 @@ import com.example.demo.dtos.ChangePasswordRequest;
 import com.example.demo.dtos.CompleteProfileRequest;
 import com.example.demo.dtos.ProfileResponse;
 import com.example.demo.entities.User;
+import com.example.demo.events.UserProfileCompletedEvent;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.validators.PasswordValidator;
 
@@ -22,6 +23,8 @@ public class ProfileService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordValidator passwordValidator;
+    private final KafkaEventPublisher eventPublisher; 
+
 
     
     @Transactional
@@ -52,6 +55,20 @@ public class ProfileService {
         
         // Sauvegarder
         user = userRepository.save(user);
+        //  PUBLIEZ L'ÉVÉNEMENT KAFKA
+        if (!isAdmin) {
+            UserProfileCompletedEvent event = UserProfileCompletedEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .phoneNumber(user.getPhoneNumber())
+                .city(user.getCity())
+                .country(user.getCountry())
+                .completedAt(LocalDateTime.now())
+                .build();
+            eventPublisher.publishUserProfileCompletedEvent(event);
+        }
+
         
         // Retourner la réponse
         return mapToProfileResponse(user);

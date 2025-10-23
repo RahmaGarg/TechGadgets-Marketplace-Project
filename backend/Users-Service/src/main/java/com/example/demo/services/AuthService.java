@@ -1,5 +1,7 @@
 package com.example.demo.services;
 
+import java.time.LocalDateTime;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,6 +12,8 @@ import com.example.demo.dtos.RegisterRequest;
 import com.example.demo.entities.Role;
 import com.example.demo.entities.User;
 import com.example.demo.enums.RoleType;
+import com.example.demo.events.SellerRegisteredEvent;
+import com.example.demo.events.UserRegisteredEvent;
 import com.example.demo.repositories.RoleRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.security.JwtTokenProvider;
@@ -26,6 +30,8 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final PasswordValidator passwordValidator;
+    private final KafkaEventPublisher eventPublisher;
+
 
     public AuthResponse register(RegisterRequest request) {
         // Vérifier si l'email existe déjà
@@ -53,6 +59,25 @@ public class AuthService {
                 .build();
         
         user = userRepository.save(user);
+        //  PUBLIEZ L'ÉVÉNEMENT KAFKA
+        if (role.getName() == RoleType.SELLER) {
+            SellerRegisteredEvent event = SellerRegisteredEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .registeredAt(LocalDateTime.now())
+                .build();
+            eventPublisher.publishSellerRegisteredEvent(event);
+        } else if (role.getName() == RoleType.CLIENT) {
+            UserRegisteredEvent event = UserRegisteredEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .role(role.getName())
+                .registeredAt(LocalDateTime.now())
+                .build();
+            eventPublisher.publishUserRegisteredEvent(event);
+        }
         
         // Générer le token
         String token = jwtTokenProvider.generateToken(user.getEmail(), role.getName().name());
