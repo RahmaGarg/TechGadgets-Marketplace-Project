@@ -125,4 +125,37 @@ public class ProductController {
         productService.deleteProduct(id, sellerId);
         return ResponseEntity.noContent().build();
     }
+    // ========== ADMIN MODERATION ENDPOINTS ==========
+    
+    /**
+     * Approve a product (ADMIN only)
+     */
+    @PostMapping("/{id}/approve")
+    // @PreAuthorize("hasRole('ADMIN')") // Uncomment if you have security
+    public ResponseEntity<ProductDTO> approveProduct(@PathVariable Long id) {
+        log.info("Admin approving product: {}", id);
+        ProductDTO approved = productService.approveProduct(id);
+        return ResponseEntity.ok(approved);
+    }
+    
+    /**
+     * Reject a product with reason (ADMIN only)
+     */
+
+    
+    /**
+     * Get all pending products (ADMIN only)
+     */
+    @GetMapping("/pending")
+    // @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ProductDTO>> getPendingProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("Fetching pending products for moderation");
+        List<ProductDTO> pending = productService.getAllProducts(page, size, ProductStatus.PENDING);
+        return ResponseEntity.ok(pending);
+    }
+    
+
+    
 }

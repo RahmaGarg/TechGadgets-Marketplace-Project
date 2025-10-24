@@ -12,6 +12,10 @@ import com.example.demo.dtos.UpdateProductDTO;
 import com.example.demo.entities.Category;
 import com.example.demo.entities.Product;
 import com.example.demo.enums.ProductStatus;
+import com.example.demo.events.ProductApprovedEvent;
+import com.example.demo.events.ProductCreatedEvent;
+import com.example.demo.events.ProductDeletedEvent;
+import com.example.demo.events.ProductRejectedEvent;
 import com.example.demo.repositories.CategoryRepository;
 import com.example.demo.repositories.ProductRepository;
 import org.springframework.data.domain.Page;
@@ -32,6 +36,9 @@ public class ProductService {
     @Autowired
     private CategoryRepository categoryRepository;
     
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+    
     public ProductDTO createProduct(CreateProductDTO dto, Long sellerId) {
         log.info("Création d'un nouveau produit pour le vendeur: {}", sellerId);
         
@@ -42,6 +49,7 @@ public class ProductService {
         product.setStock(dto.getStock());
         product.setSellerId(sellerId);
         product.setImageUrl(dto.getImageUrl());
+        product.setStatus(ProductStatus.PENDING); // Initial status
         
         if (dto.getCategoryId() != null) {
             Category category = categoryRepository.findById(dto.getCategoryId())
@@ -51,6 +59,15 @@ public class ProductService {
         
         Product saved = productRepository.save(product);
         log.info("Produit créé avec ID: {}", saved.getId());
+        
+        // 🔥 SEND KAFKA EVENT
+        ProductCreatedEvent event = ProductCreatedEvent.builder()
+                .productId(saved.getId())
+                .productName(saved.getName())
+                .sellerId(saved.getSellerId())
+                .build();
+        kafkaProducerService.sendProductCreatedEvent(event);
+        
         return convertToDTO(saved);
     }
     
@@ -136,8 +153,21 @@ public class ProductService {
             throw new RuntimeException("Non autorisé à supprimer ce produit");
         }
         
+        // Store product info before deletion
+        Long productId = product.getId();
+        String productName = product.getName();
+        Long productSellerId = product.getSellerId();
+        
         productRepository.delete(product);
         log.info("Produit {} supprimé avec succès", id);
+        
+        // 🔥 SEND KAFKA EVENT for stock-service
+        ProductDeletedEvent event = ProductDeletedEvent.builder()
+                .productId(productId)
+                .productName(productName)
+                .sellerId(productSellerId)
+                .build();
+        kafkaProducerService.sendProductDeletedEvent(event);
     }
     
     public ProductDTO updateProductStatus(Long id, ProductStatus status) {
@@ -146,10 +176,59 @@ public class ProductService {
         Product product = productRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Produit non trouvé avec ID: " + id));
         
+        ProductStatus oldStatus = product.getStatus();
         product.setStatus(status);
         Product updated = productRepository.save(product);
         
         log.info("Statut du produit {} mis à jour vers {}", id, status);
+        
+        // 🔥 SEND KAFKA EVENTS based on status change
+        if (status == ProductStatus.APPROVED && oldStatus != ProductStatus.APPROVED) {
+            ProductApprovedEvent event = ProductApprovedEvent.builder()
+                    .productId(updated.getId())
+                    .productName(updated.getName())
+                    .sellerId(updated.getSellerId())
+                    .build();
+            kafkaProducerService.sendProductApprovedEvent(event);
+        } else if (status == ProductStatus.REJECTED && oldStatus != ProductStatus.REJECTED) {
+            ProductRejectedEvent event = ProductRejectedEvent.builder()
+                    .productId(updated.getId())
+                    .productName(updated.getName())
+                    .sellerId(updated.getSellerId())
+                    .rejectionReason("Produit non conforme aux standards") // You can add this as parameter
+                    .build();
+            kafkaProducerService.sendProductRejectedEvent(event);
+        }
+        
+        return convertToDTO(updated);
+    }
+    
+    // 🆕 NEW METHOD: Approve product with reason
+    public ProductDTO approveProduct(Long id) {
+        log.info("Approbation du produit {}", id);
+        return updateProductStatus(id, ProductStatus.APPROVED);
+    }
+    
+    // 🆕 NEW METHOD: Reject product with reason
+    public ProductDTO rejectProduct(Long id, String rejectionReason) {
+        log.info("Rejet du produit {} avec raison: {}", id, rejectionReason);
+        
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Produit non trouvé avec ID: " + id));
+        
+        product.setStatus(ProductStatus.REJECTED);
+        Product updated = productRepository.save(product);
+        
+        // 🔥 SEND KAFKA EVENT with custom reason
+        ProductRejectedEvent event = ProductRejectedEvent.builder()
+                .productId(updated.getId())
+                .productName(updated.getName())
+                .sellerId(updated.getSellerId())
+                .rejectionReason(rejectionReason)
+                .build();
+        kafkaProducerService.sendProductRejectedEvent(event);
+        
+        log.info("Produit {} rejeté avec succès", id);
         return convertToDTO(updated);
     }
     
